@@ -26,4 +26,29 @@ const getPartById = async (req, res) => {
   }
 };
 
-module.exports = { getAllParts, getPartById };
+const updatePart = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const result = await pool.query(
+      'UPDATE parts SET name = $1, description = $2 WHERE id = $3 RETURNING *',
+      [name, description ?? null, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Part not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('updatePart error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { getAllParts, getPartById, updatePart };
